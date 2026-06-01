@@ -1,0 +1,46 @@
+name: Build Custom Xray Android
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goarch: [arm64, amd64]
+    
+    env:
+      GOOS: android
+      GOARCH: ${{ matrix.goarch }}
+      CGO_ENABLED: 1
+    
+    steps:
+      - uses: actions/checkout@v6
+      
+      - name: Set up NDK
+        run: |
+          wget -qO android-ndk.zip https://dl.google.com/android/repository/android-ndk-r28b-linux.zip
+          unzip -q android-ndk.zip && rm android-ndk.zip
+          declare -A arches=(["amd64"]="x86_64-linux-android24-clang" ["arm64"]="aarch64-linux-android24-clang")
+          echo CC="$(realpath android-ndk-*/toolchains/llvm/prebuilt/linux-x86_64/bin)/${arches[$GOARCH]}" >> $GITHUB_ENV
+      
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      
+      - name: Build Xray Android
+        run: |
+          mkdir -p build_assets
+          COMMID=$(git describe --always --dirty)
+          go build -o build_assets/xray \
+            -trimpath -buildvcs=false \
+            -gcflags="all=-l=4" \
+            -ldflags="-X github.com/xtls/xray-core/core.build=${COMMID} -s -w -buildid= -checklinkname=0" \
+            -v ./main
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: xray-android-${{ matrix.goarch }}
+          path: build_assets/xray
