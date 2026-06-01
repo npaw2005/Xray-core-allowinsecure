@@ -39,7 +39,7 @@ jobs:
         if [ "${{ matrix.goos }}" = "windows" ]; then
           OUTPUT_NAME="${OUTPUT_NAME}.exe"
         fi
-        go build -o dist/${OUTPUT_NAME} -trimpath -ldflags="-s -w" ./cmd/xray
+        go build -o dist/${OUTPUT_NAME} -trimpath -ldflags="-s -w" ./main
         echo "Build complete: dist/${OUTPUT_NAME}"
         ls -lh dist/
 
