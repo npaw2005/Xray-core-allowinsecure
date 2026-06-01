@@ -1,4 +1,4 @@
-module github.com/xtls/xray-core
+module github.com/npaw2005/Xray-core-allowinsecure
 
 go 1.26
 
